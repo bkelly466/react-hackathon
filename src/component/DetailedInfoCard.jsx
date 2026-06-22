@@ -1,6 +1,5 @@
 // Presentational Component
-
-export default function MoreInfo({ setExpandedKanji, selectedData }) {
+export default function DetailedCardInfo({ setExpandedKanji, selectedData, onAddCard }) {
 
 if (!selectedData) return null;
 
@@ -18,8 +17,15 @@ if (!selectedData) return null;
 
             <div className="card-body p-4 pt-0">
                 
-                <div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
                     <h2 className="display-1 fw-bold text-dark mb-3">{selectedData.kanji}</h2>
+
+                    <button 
+                        className="btn btn-dark"
+                        onClick={() => onAddCard?.(selectedData)}
+                    >
+                        Add to Deck
+                    </button>
                 </div>
                 
                 <div className="mb-4">
