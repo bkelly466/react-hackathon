@@ -1,16 +1,13 @@
-# React + Vite
+Kanjutsu 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Japanese study aid.
 
-Currently, two official plugins are available:
+This app is an attempt to recreate what I love about the Pleco Chinese dictionary for Japanese language learners. 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+I have begun with a simple Kanji lookup feature using the kanjiapi that is enriched with the 10 most common words from the Jisho Api. Users can add the kanji as a flashcard to a deck which is stored locally. The flashcards can be studied with spaced repetition and decks can be built based on User preferences.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Future updates:
+- Kanji characters will be clickable to find their entry.
+- Change the structure so that user can look up words with enriched data from the kanjiapi.
+- add example sentences.
+- ai produced example sentence/paragraph at the end of study session that uses words studied.
