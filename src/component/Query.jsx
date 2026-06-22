@@ -2,7 +2,7 @@ import { useState } from 'react';
 import MiniKanjiCard from './MiniKanjiCard';
 import DetailedInfoCard from './DetailedInfoCard';
 
-export default function Query( {onAddCard} ){
+export default function Query( {onAddCard, onOpenDeckPicker} ){
     const [error, setError] = useState('');
     const [kanjiList, setKanjiList] = useState([]); 
     const [query, setQuery] = useState('');
@@ -129,8 +129,8 @@ export default function Query( {onAddCard} ){
                         </div>
 
                         {/* Show the detailed card below the row when one is selected. */}
-                        {expandedKanji && 
-                            <DetailedInfoCard selectedData={selectedData} setExpandedKanji={setExpandedKanji} onAddCard={onAddCard}/>
+                        {expandedKanji &&
+                            <DetailedInfoCard selectedData={selectedData} setExpandedKanji={setExpandedKanji} onAddCard={onAddCard} onOpenDeckPicker={onOpenDeckPicker}/>
                         }
                     </div>
                 )
