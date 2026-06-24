@@ -7,6 +7,7 @@ import StudySession from './components/StudySession';
 import AddToDeckModal from './components/AddToDeckModal';
 import { useDecks } from './hooks/useDecks';
 import { getCardsForReview } from './utils/srs';
+import logo from './assets/logo.png'
 
 // View states for the "My Decks" tab
 // 'list' | 'detail' | 'study'
@@ -88,8 +89,11 @@ function App() {
   return (
     <>
       <div className="container my-5 text-dark">
-        <div className="brand-header text-center">
-          <h1 className="brand-title">KanJutsu</h1>
+        <div className="brand-header text-center mb-5">
+          <div className="brand-badge-container mt-5">
+            <img src={logo} alt="Kanjutsu Logo" className="brand-logo-watermark" />
+            <h1 className="brand-title">KanJutsu</h1>
+          </div>
           <div className="brand-divider"></div>
         </div>
 
