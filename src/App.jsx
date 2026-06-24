@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import './App.css';
-import Query from './component/Query';
-import DeckList from './component/DeckList';
-import DeckDetail from './component/DeckDetail';
-import StudySession from './component/StudySession';
-import AddToDeckModal from './component/AddToDeckModal';
-import { useDecks } from './Hooks/useDecks';
+import Query from './components/Query';
+import DeckList from './components/DeckList';
+import DeckDetail from './components/DeckDetail';
+import StudySession from './components/StudySession';
+import AddToDeckModal from './components/AddToDeckModal';
+import { useDecks } from './hooks/useDecks';
+import { getCardsForReview } from './utils/srs';
 
 // View states for the "My Decks" tab
 // 'list' | 'detail' | 'study'
@@ -26,6 +27,10 @@ function App() {
   } = useDecks();
 
   const selectedDeck = decks.find(d => d.id === selectedDeckId);
+  const totalDueCount = decks.reduce(
+    (sum, d) => sum + getCardsForReview(d.cards).length,
+    0
+  );
 
   const handleSelectDeck = (deckId) => {
     setSelectedDeckId(deckId);
@@ -104,14 +109,9 @@ function App() {
               onClick={() => setActiveTab('decks')}
             >
               My Decks
-              {decks.reduce((acc, d) => {
-                const due = d.cards.filter(c => new Date(c.nextReviewDate) <= new Date()).length;
-                return acc + due;
-              }, 0) > 0 && (
+              {totalDueCount > 0 && (
                 <span className="badge bg-danger ms-2" style={{ fontSize: '0.65rem' }}>
-                  {decks.reduce((acc, d) => {
-                    return acc + d.cards.filter(c => new Date(c.nextReviewDate) <= new Date()).length;
-                  }, 0)}
+                  {totalDueCount}
                 </span>
               )}
             </button>

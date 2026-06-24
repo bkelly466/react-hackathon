@@ -1,13 +1,7 @@
 import { useState } from 'react';
-import { getCardsForReview } from '../utils/srsAlgoritm';
+import { getCardsForReview } from '../utils/srs';
+import { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR } from '../constants/categories';
 import CreateDeckModal from './CreateDeckModal';
-
-const CATEGORY_COLORS = {
-  jlpt: 'primary',
-  grade: 'success',
-  theme: 'warning',
-  custom: 'secondary',
-};
 
 export default function DeckList({ decks, onCreateDeck, onUpdateDeck, onDeleteDeck, onSelectDeck }) {
   const [showCreate, setShowCreate] = useState(false);
@@ -51,7 +45,7 @@ export default function DeckList({ decks, onCreateDeck, onUpdateDeck, onDeleteDe
         <div className="row g-3">
           {decks.map(deck => {
             const dueCount = getCardsForReview(deck.cards).length;
-            const color = CATEGORY_COLORS[deck.category?.type] || 'secondary';
+            const color = CATEGORY_COLORS[deck.category?.type] || DEFAULT_CATEGORY_COLOR;
 
             return (
               <div key={deck.id} className="col-12 col-md-6">

@@ -1,4 +1,4 @@
-import { getCardsForReview } from '../utils/srsAlgoritm';
+import { getCardsForReview } from '../utils/srs';
 
 export default function DeckDetail({ deck, onBack, onStudy, onRemoveCard }) {
   if (!deck) return null;

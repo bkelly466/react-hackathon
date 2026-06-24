@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { calculateNextReview, getCardsForReview } from '../utils/srsAlgoritm';
+import { useState } from 'react';
+import { calculateNextReview, getCardsForReview } from '../utils/srs';
 
 const RATINGS = [
   { quality: 0, label: 'Again', color: '#dc3545', hint: 'Complete blackout' },
@@ -100,7 +100,7 @@ export default function StudySession({ deck, onUpdateCardSRS, onBack }) {
     );
   }
 
-  const progress = total > 0 ? (currentIndex / total) * 100 : 0;
+  const progress = total > 0 ? Math.min(100, (currentIndex / total) * 100) : 0;
 
   return (
     <div>
@@ -113,7 +113,7 @@ export default function StudySession({ deck, onUpdateCardSRS, onBack }) {
           <div className="progress" style={{ height: 6 }}>
             <div
               className="progress-bar bg-dark"
-              style={{ width: `${Math.min(100, (currentIndex / total) * 100)}%` }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>

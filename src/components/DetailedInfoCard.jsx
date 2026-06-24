@@ -1,7 +1,7 @@
 // Presentational Component
-export default function DetailedCardInfo({ setExpandedKanji, selectedData, onAddCard, onOpenDeckPicker }) {
+export default function DetailedInfoCard({ setExpandedKanji, selectedData, onOpenDeckPicker }) {
 
-if (!selectedData) return null;
+  if (!selectedData) return null;
 
     return (
         <div className="card shadow-sm border-light mb-3 w-100">
@@ -22,7 +22,7 @@ if (!selectedData) return null;
 
                     <button
                         className="btn btn-dark"
-                        onClick={() => (onOpenDeckPicker ?? onAddCard)?.(selectedData)}
+                        onClick={() => onOpenDeckPicker?.(selectedData)}
                     >
                         Add to Deck
                     </button>

@@ -1,14 +1,5 @@
-import { useState, useEffect } from 'react';
-
-const CATEGORY_OPTIONS = [
-  { value: 'jlpt', label: 'JLPT Level' },
-  { value: 'grade', label: 'School Grade' },
-  { value: 'theme', label: 'Theme' },
-  { value: 'custom', label: 'Custom' },
-];
-
-const JLPT_VALUES = ['N1', 'N2', 'N3', 'N4', 'N5'];
-const GRADE_VALUES = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Secondary'];
+import { useState } from 'react';
+import { CATEGORY_OPTIONS, JLPT_VALUES, GRADE_VALUES } from '../constants/categories';
 
 export default function CreateDeckModal({ onSave, onClose, existingDeck }) {
   const [name, setName] = useState(existingDeck?.name || '');
@@ -16,9 +7,13 @@ export default function CreateDeckModal({ onSave, onClose, existingDeck }) {
   const [categoryType, setCategoryType] = useState(existingDeck?.category?.type || 'custom');
   const [categoryValue, setCategoryValue] = useState(existingDeck?.category?.value || '');
 
-  useEffect(() => {
+  // Switching category type clears the value, since a JLPT level and a custom
+  // label aren't interchangeable. Doing this in the handler (rather than an
+  // effect) preserves the prefilled value when editing an existing deck.
+  const handleCategoryTypeChange = (type) => {
+    setCategoryType(type);
     setCategoryValue('');
-  }, [categoryType]);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -115,7 +110,7 @@ export default function CreateDeckModal({ onSave, onClose, existingDeck }) {
                       key={opt.value}
                       type="button"
                       className={`btn btn-sm ${categoryType === opt.value ? 'btn-dark' : 'btn-outline-secondary'}`}
-                      onClick={() => setCategoryType(opt.value)}
+                      onClick={() => handleCategoryTypeChange(opt.value)}
                     >
                       {opt.label}
                     </button>

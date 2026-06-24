@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createCard } from '../utils/card';
 
 const STORAGE_KEY = 'kanjutsu_decks';
 
@@ -40,30 +41,12 @@ export function useDecks() {
   };
 
   const addCardToDeck = (deckId, kanjiData) => {
-    const newCard = {
-      id: crypto.randomUUID(),
-      kanji: kanjiData.kanji,
-      front: kanjiData.kanji,
-      back: {
-        meanings: (kanjiData.meanings || []).join(', '),
-        onyomi: (kanjiData.on_readings || []).join('、'),
-        kunyomi: (kanjiData.kun_readings || []).join('、'),
-      },
-      jlpt: kanjiData.jlpt,
-      grade: kanjiData.grade,
-      repetitions: 0,
-      easeFactor: 2.5,
-      interval: 0,
-      nextReviewDate: new Date().toISOString(),
-      addedAt: new Date().toISOString(),
-    };
-
     setDecks(prev =>
       prev.map(d => {
         if (d.id !== deckId) return d;
         const alreadyExists = d.cards.some(c => c.kanji === kanjiData.kanji);
         if (alreadyExists) return d;
-        return { ...d, cards: [...d.cards, newCard] };
+        return { ...d, cards: [...d.cards, createCard(kanjiData)] };
       })
     );
   };
