@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="KanJutsu">
+  <title>KanJutsu</title>
+  <g fill="#BE3B36">
+    <path d="M28 160 Q256 56 484 160 L484 192 Q256 116 28 192 Z"/>
+    <rect x="238" y="150" width="36" height="80"/>
+    <path d="M138 150 L186 150 L196 376 L128 376 Z"/>
+    <path d="M326 150 L374 150 L384 376 L316 376 Z"/>
+    <rect x="84" y="228" width="344" height="50" rx="2"/>
+    <rect x="110" y="376" width="104" height="28" rx="6"/>
+    <rect x="298" y="376" width="104" height="28" rx="6"/>
+  </g>
+</svg>
