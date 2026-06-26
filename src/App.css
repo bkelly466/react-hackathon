@@ -42,6 +42,51 @@
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); /* Keeps text crisp over the graphic */
 }
 
+/* ------------------------------------------------------------------ */
+/* Clickable kanji inline button                                        */
+/* Used inside DetailedInfoCard's Common Words list. Appears as a      */
+/* styled character rather than a rectangular browser button.          */
+/* ------------------------------------------------------------------ */
+.kanji-link {
+  /* Reset browser button defaults so it blends into surrounding text */
+  background: none;
+  border: none;
+  padding: 0 1px;
+  margin: 0;
+
+  /* Visual affordance: matches Bootstrap's info-emphasis colour        */
+  /* (the same colour used for the word text next to it)               */
+  color: var(--bs-info-text-emphasis, #055160);
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  cursor: pointer;
+
+  /* Subtle underline so the user knows it's interactive               */
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+
+  /* Smooth colour transition on hover                                 */
+  transition: color 0.15s ease-in-out;
+}
+
+.kanji-link:hover,
+.kanji-link:focus-visible {
+  /* Shift to Bootstrap danger (red) on hover — prominent but familiar */
+  color: #dc3545;
+  text-decoration-style: solid;
+}
+
+/* Keyboard users (Tab navigation) get a visible focus ring. We keep this so
+   the button is clearly focusable — removing the outline here would be a
+   WCAG "focus visible" failure. focus-visible only fires for keyboard focus,
+   so mouse clicks don't show the ring. */
+.kanji-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 /* Clean accent divider */
 .brand-divider {
   width: 300px;

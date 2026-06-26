@@ -16,6 +16,32 @@ export default function Query({ onOpenDeckPicker }) {
     search(query);
   };
 
+  /**
+   * Called when the user clicks a kanji character inside the DetailedInfoCard.
+   *
+   * Why define this here rather than in DetailedInfoCard?
+   * Because `search` and `setExpandedKanji` live in this component — they are
+   * "owned" here. Passing this callback down as a prop keeps DetailedInfoCard
+   * as a presentational component (it displays data; it doesn't run searches).
+   * This pattern is called "lifting state up": the child signals intent via a
+   * callback, and the parent decides what to do with it.
+   *
+   * Flow:
+   *   1. User clicks a kanji char in the common words list
+   *   2. DetailedInfoCard calls onKanjiClick(char)
+   *   3. We run a fresh search for that single char — same path as the search box
+   *   4. We also update the search input text so the box stays in sync
+   *   5. expandedKanji is reset to null; the new result's mini-card starts unexpanded
+   */
+  const handleKanjiClick = (char) => {
+    // Keep the search input in sync with what we're looking up
+    setQuery(char);
+    // Clear the expanded card so we start fresh when new results arrive
+    setExpandedKanji(null);
+    // Reuse the exact same search function the submit button uses
+    search(char);
+  };
+
   return (
     <>
       <div className="d-flex flex-column align-items-center text-center mb-4">
@@ -67,6 +93,7 @@ export default function Query({ onOpenDeckPicker }) {
                 selectedData={selectedData}
                 setExpandedKanji={setExpandedKanji}
                 onOpenDeckPicker={onOpenDeckPicker}
+                onKanjiClick={handleKanjiClick}
               />
             )}
           </div>
