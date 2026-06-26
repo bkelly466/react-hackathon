@@ -27,3 +27,6 @@ dist-ssr
 .amplify
 amplify_outputs*
 amplifyconfiguration*
+
+# Claude Code — machine-local permission state, never commit
+.claude/settings.local.json

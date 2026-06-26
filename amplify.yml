@@ -10,6 +10,26 @@ frontend:
     preBuild:
       commands:
         - npm install
+        # Read the Jisho proxy URL from the Amplify backend outputs file.
+        #
+        # After the backend phase runs, Amplify writes a file called
+        # amplify_outputs.json that contains config and any custom outputs we
+        # added via backend.addOutput(). We read the jishoProxyUrl value out of
+        # it and export it as VITE_JISHO_PROXY_URL so Vite bakes it into the
+        # production JS bundle at build time.
+        #
+        # We use `node` (always present in the build image) rather than `jq`,
+        # which isn't guaranteed to be installed in the current Amplify image.
+        #
+        # `import.meta.env.VITE_*` variables are how Vite exposes build-time
+        # values to client-side code. Any env var prefixed VITE_ is embedded
+        # into the bundle when `vite build` runs.
+        - export VITE_JISHO_PROXY_URL=$(node -e "process.stdout.write((require('./amplify_outputs.json').custom || {}).jishoProxyUrl || '')")
+        - echo "VITE_JISHO_PROXY_URL=$VITE_JISHO_PROXY_URL"
+        # Fail the build loudly if the URL is missing, instead of silently
+        # shipping a bundle that falls back to /api/jishoapi (which 404s in
+        # production and breaks every Jisho lookup).
+        - test -n "$VITE_JISHO_PROXY_URL" || (echo "ERROR: jishoProxyUrl missing from amplify_outputs.json — backend deploy may have failed" && exit 1)
     build:
       commands:
         - npm run build
