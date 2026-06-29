@@ -1,12 +1,19 @@
 import { useState } from 'react';
 import CreateDeckModal from './CreateDeckModal';
+import { sourceKey, getCardKey } from '../utils/card';
 
-export default function AddToDeckModal({ decks, kanjiData, onAdd, onCreateDeck, onClose }) {
+// Works for both a kanji item (type 'kanji') and a word item (type 'word').
+export default function AddToDeckModal({ decks, item, type = 'kanji', onAdd, onCreateDeck, onClose }) {
   const [showCreate, setShowCreate] = useState(false);
   const [addedDeckIds, setAddedDeckIds] = useState(new Set());
 
+  // Display + dedupe values that differ by item type.
+  const key = sourceKey(item, type);
+  const title = type === 'word' ? item.word : item.kanji;
+  const subtitle = (item.meanings || []).slice(0, 3).join(', ');
+
   const handleAdd = (deckId) => {
-    onAdd(deckId, kanjiData);
+    onAdd(deckId, item, type);
     setAddedDeckIds(prev => new Set([...prev, deckId]));
   };
 
@@ -17,7 +24,7 @@ export default function AddToDeckModal({ decks, kanjiData, onAdd, onCreateDeck, 
   };
 
   const isInDeck = (deck) =>
-    deck.cards.some(c => c.kanji === kanjiData.kanji) || addedDeckIds.has(deck.id);
+    deck.cards.some(c => getCardKey(c) === key) || addedDeckIds.has(deck.id);
 
   if (showCreate) {
     return (
@@ -41,8 +48,8 @@ export default function AddToDeckModal({ decks, kanjiData, onAdd, onCreateDeck, 
         <div className="modal-content">
           <div className="modal-header border-0">
             <div>
-              <h5 className="modal-title fw-bold">Add {kanjiData.kanji} to Deck</h5>
-              <p className="text-muted small mb-0">{(kanjiData.meanings || []).slice(0, 3).join(', ')}</p>
+              <h5 className="modal-title fw-bold">Add {title} to Deck</h5>
+              <p className="text-muted small mb-0">{subtitle}</p>
             </div>
             <button type="button" className="btn-close" onClick={onClose} />
           </div>

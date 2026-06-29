@@ -29,7 +29,7 @@ export default function DetailedInfoCard({ setExpandedKanji, selectedData, onOpe
 
                     <button
                         className="btn btn-dark"
-                        onClick={() => onOpenDeckPicker?.(selectedData)}
+                        onClick={() => onOpenDeckPicker?.(selectedData, 'kanji')}
                     >
                         Add to Deck
                     </button>

@@ -1,17 +1,51 @@
 import { SRS_DEFAULTS } from './srs';
 
 /**
- * Build a new flashcard from enriched kanji API data.
+ * Cards come in two flavours now:
+ *   - 'kanji' — a single character (from the kanji lookup)
+ *   - 'word'  — a vocabulary entry (from the Jisho word lookup)
  *
- * `front` is the kanji itself; `back` holds the readings/meanings shown after
- * a flip. SRS scheduling fields start from SRS_DEFAULTS so a fresh card is
- * immediately due for review.
+ * Both share the same SRS fields and the same { id, type, key, front, back }
+ * shape so the deck/study code can treat them uniformly. `front` is what shows
+ * on the front of the flashcard; `back` holds what's revealed on flip.
+ *
+ * `key` is a stable identity used to prevent adding the same item twice.
+ *   - kanji: the character itself (e.g. "食")
+ *   - word:  "word::reading" (e.g. "食べる::たべる")
+ */
+
+/**
+ * Stable dedupe key for a source item about to be turned into a card.
+ * @param {object} item - kanji data or normalised word data
+ * @param {'kanji'|'word'} type
+ */
+export function sourceKey(item, type) {
+  if (type === 'word') {
+    return `${item.word}::${item.reading || ''}`;
+  }
+  return item.kanji;
+}
+
+/**
+ * Stable dedupe key for an EXISTING card. Backward-compatible: cards saved
+ * before Phase 2 have no `key`/`type`, so we fall back to their `kanji` field.
+ */
+export function getCardKey(card) {
+  if (card.key) return card.key;
+  return card.kanji; // legacy kanji card
+}
+
+/**
+ * Build a flashcard from enriched kanji API data.
+ * `front` is the kanji; `back` holds the readings/meanings shown after a flip.
  */
 export function createCard(kanjiData) {
   const now = new Date().toISOString();
 
   return {
     id: crypto.randomUUID(),
+    type: 'kanji',
+    key: sourceKey(kanjiData, 'kanji'),
     kanji: kanjiData.kanji,
     front: kanjiData.kanji,
     back: {
@@ -21,6 +55,34 @@ export function createCard(kanjiData) {
     },
     jlpt: kanjiData.jlpt,
     grade: kanjiData.grade,
+    ...SRS_DEFAULTS,
+    nextReviewDate: now,
+    addedAt: now,
+  };
+}
+
+/**
+ * Build a flashcard from normalised word data (see src/api/words.js).
+ * Recognition direction: `front` is the Japanese word, `back` reveals the
+ * reading and meanings — matching how kanji cards work.
+ */
+export function createWordCard(wordData) {
+  const now = new Date().toISOString();
+
+  return {
+    id: crypto.randomUUID(),
+    type: 'word',
+    key: sourceKey(wordData, 'word'),
+    word: wordData.word,
+    reading: wordData.reading,
+    front: wordData.word,
+    back: {
+      // Flatten the first few senses into a readable string.
+      meanings: (wordData.meanings || []).join(', '),
+      reading: wordData.reading || '',
+    },
+    // Word JLPT comes as an array (e.g. ["N5"]); keep the first level for display.
+    jlpt: wordData.jlpt?.[0] || null,
     ...SRS_DEFAULTS,
     nextReviewDate: now,
     addedAt: now,

@@ -42,7 +42,7 @@ export default function DeckDetail({ deck, onBack, onStudy, onRemoveCard }) {
         <div className="text-center py-5 text-muted">
           <div style={{ fontSize: '2.5rem' }}>📭</div>
           <p className="mt-2">No cards in this deck yet.</p>
-          <p className="small">Search for kanji and use "Add to Deck" to add cards here.</p>
+          <p className="small">Search for kanji or words and use "Add to Deck" to add cards here.</p>
         </div>
       ) : (
         <>
@@ -62,15 +62,23 @@ export default function DeckDetail({ deck, onBack, onStudy, onRemoveCard }) {
               >
                 <div className="d-flex align-items-center gap-3">
                   <span style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                    {card.kanji}
+                    {card.front ?? card.kanji}
                   </span>
                   <div>
                     <div className="text-muted small">
                       {card.back.meanings}
                     </div>
                     <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                      {card.back.onyomi && <span>音: {card.back.onyomi} </span>}
-                      {card.back.kunyomi && <span>訓: {card.back.kunyomi}</span>}
+                      {/* Word cards show a reading; kanji cards show on/kun'yomi.
+                          card.type is absent on legacy cards → treated as kanji. */}
+                      {card.type === 'word' ? (
+                        card.back.reading && <span>読み: {card.back.reading}</span>
+                      ) : (
+                        <>
+                          {card.back.onyomi && <span>音: {card.back.onyomi} </span>}
+                          {card.back.kunyomi && <span>訓: {card.back.kunyomi}</span>}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

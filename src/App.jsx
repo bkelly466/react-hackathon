@@ -9,13 +9,15 @@ import { useDecks } from './hooks/useDecks';
 import { getCardsForReview } from './utils/srs';
 import logo from './assets/logo.png'
 
-// View states for the "My Decks" tab
+// * View states for the "My Decks" tab
 // 'list' | 'detail' | 'study'
 function App() {
   const [activeTab, setActiveTab] = useState('dictionary');
   const [decksView, setDecksView] = useState('list');
   const [selectedDeckId, setSelectedDeckId] = useState(null);
-  const [deckPickerKanji, setDeckPickerKanji] = useState(null);
+  // What the "Add to Deck" picker is currently adding: { item, type } or null.
+  // `type` is 'kanji' or 'word'.
+  const [deckPickerTarget, setDeckPickerTarget] = useState(null);
 
   const {
     decks,
@@ -47,12 +49,14 @@ function App() {
 
   const handleBackToDetail = () => setDecksView('detail');
 
-  const handleOpenDeckPicker = (kanjiData) => {
-    setDeckPickerKanji(kanjiData);
+  // type defaults to 'kanji' so the kanji detail card can keep calling it
+  // with a single argument.
+  const handleOpenDeckPicker = (item, type = 'kanji') => {
+    setDeckPickerTarget({ item, type });
   };
 
-  const handleAddToDeck = (deckId, kanjiData) => {
-    addCardToDeck(deckId, kanjiData);
+  const handleAddToDeck = (deckId, item, type) => {
+    addCardToDeck(deckId, item, type);
   };
 
   const renderDecksContent = () => {
@@ -128,13 +132,14 @@ function App() {
           renderDecksContent()
         )}
 
-        {deckPickerKanji && (
+        {deckPickerTarget && (
           <AddToDeckModal
             decks={decks}
-            kanjiData={deckPickerKanji}
+            item={deckPickerTarget.item}
+            type={deckPickerTarget.type}
             onAdd={handleAddToDeck}
             onCreateDeck={createDeck}
-            onClose={() => setDeckPickerKanji(null)}
+            onClose={() => setDeckPickerTarget(null)}
           />
         )}
       </div>

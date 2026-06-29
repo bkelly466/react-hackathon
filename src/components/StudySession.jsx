@@ -101,6 +101,9 @@ export default function StudySession({ deck, onUpdateCardSRS, onBack }) {
   }
 
   const progress = total > 0 ? Math.min(100, (currentIndex / total) * 100) : 0;
+  // Word cards reveal a reading; kanji cards reveal on'yomi/kun'yomi. Legacy
+  // cards (saved before word support) have no `type`, so they render as kanji.
+  const isWord = current.type === 'word';
 
   return (
     <div>
@@ -133,8 +136,8 @@ export default function StudySession({ deck, onUpdateCardSRS, onBack }) {
       >
         <div className="card-body d-flex flex-column justify-content-center align-items-center p-4">
           {/* Front */}
-          <div style={{ fontSize: '5rem', fontWeight: 'bold', lineHeight: 1, marginBottom: '0.5rem' }}>
-            {current.kanji}
+          <div style={{ fontSize: isWord ? '3rem' : '5rem', fontWeight: 'bold', lineHeight: 1, marginBottom: '0.5rem' }}>
+            {current.front}
           </div>
 
           {!isFlipped && (
@@ -147,16 +150,27 @@ export default function StudySession({ deck, onUpdateCardSRS, onBack }) {
               <hr />
               <div className="fs-5 fw-semibold mb-2">{current.back.meanings}</div>
               <div className="text-muted small d-flex flex-wrap gap-3 justify-content-center">
-                {current.back.onyomi && (
-                  <span>音読み: <strong>{current.back.onyomi}</strong></span>
-                )}
-                {current.back.kunyomi && (
-                  <span>訓読み: <strong>{current.back.kunyomi}</strong></span>
+                {isWord ? (
+                  current.back.reading && (
+                    <span>読み: <strong>{current.back.reading}</strong></span>
+                  )
+                ) : (
+                  <>
+                    {current.back.onyomi && (
+                      <span>音読み: <strong>{current.back.onyomi}</strong></span>
+                    )}
+                    {current.back.kunyomi && (
+                      <span>訓読み: <strong>{current.back.kunyomi}</strong></span>
+                    )}
+                  </>
                 )}
               </div>
               {(current.jlpt || current.grade) && (
                 <div className="text-muted mt-2" style={{ fontSize: '0.75rem' }}>
-                  {current.jlpt && <span className="me-2">JLPT N{current.jlpt}</span>}
+                  {/* Word JLPT is already like "N5"; kanji JLPT is a number. */}
+                  {current.jlpt && (
+                    <span className="me-2">JLPT {isWord ? current.jlpt : `N${current.jlpt}`}</span>
+                  )}
                   {current.grade && <span>Grade {current.grade}</span>}
                 </div>
               )}

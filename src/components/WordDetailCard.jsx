@@ -8,7 +8,8 @@ import { renderWithClickableKanji } from '../utils/clickableKanji';
 
 // onKanjiClick: function(char) — called when a kanji in the word is clicked.
 //   Passed down from Query, which switches to Kanji mode and runs the lookup.
-export default function WordDetailCard({ wordData, onClose, onKanjiClick }) {
+// onOpenDeckPicker: function(item, type) — opens the "Add to Deck" picker.
+export default function WordDetailCard({ wordData, onClose, onKanjiClick, onOpenDeckPicker }) {
   if (!wordData) return null;
 
   return (
@@ -23,13 +24,24 @@ export default function WordDetailCard({ wordData, onClose, onKanjiClick }) {
       </div>
 
       <div className="card-body p-4 pt-0">
-        {/* Headword. Each kanji is a button that cross-navigates to Kanji mode.
-            currentKanji is null here: in word mode no single kanji is "current". */}
-        <h2 className="display-4 fw-bold text-dark mb-1">
-          {onKanjiClick
-            ? renderWithClickableKanji(wordData.word, null, onKanjiClick)
-            : wordData.word}
-        </h2>
+        <div className="d-flex justify-content-between align-items-start mb-1">
+          {/* Headword. Each kanji is a button that cross-navigates to Kanji mode.
+              currentKanji is null here: in word mode no single kanji is "current". */}
+          <h2 className="display-4 fw-bold text-dark mb-0">
+            {onKanjiClick
+              ? renderWithClickableKanji(wordData.word, null, onKanjiClick)
+              : wordData.word}
+          </h2>
+
+          {onOpenDeckPicker && (
+            <button
+              className="btn btn-dark flex-shrink-0 ms-2"
+              onClick={() => onOpenDeckPicker(wordData, 'word')}
+            >
+              Add to Deck
+            </button>
+          )}
+        </div>
 
         {wordData.reading && wordData.reading !== wordData.word && (
           <div className="fs-5 text-muted mb-2">{wordData.reading}</div>

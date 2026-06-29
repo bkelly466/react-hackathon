@@ -161,6 +161,7 @@ export default function Query({ onOpenDeckPicker }) {
                 wordData={selectedWordData}
                 onClose={() => setExpandedWordId(null)}
                 onKanjiClick={handleKanjiClick}
+                onOpenDeckPicker={onOpenDeckPicker}
               />
             )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createCard } from '../utils/card';
+import { createCard, createWordCard, getCardKey } from '../utils/card';
 
 const STORAGE_KEY = 'kanjutsu_decks';
 
@@ -40,13 +40,18 @@ export function useDecks() {
     setDecks(prev => prev.filter(d => d.id !== deckId));
   };
 
-  const addCardToDeck = (deckId, kanjiData) => {
+  // Add a kanji OR a word to a deck. `type` selects which card builder to use;
+  // it defaults to 'kanji' so any older call sites keep working.
+  const addCardToDeck = (deckId, item, type = 'kanji') => {
+    const newCard = type === 'word' ? createWordCard(item) : createCard(item);
     setDecks(prev =>
       prev.map(d => {
         if (d.id !== deckId) return d;
-        const alreadyExists = d.cards.some(c => c.kanji === kanjiData.kanji);
+        // Dedupe on the stable card key (handles both kanji and word cards,
+        // plus legacy cards with no `key` via getCardKey's fallback).
+        const alreadyExists = d.cards.some(c => getCardKey(c) === newCard.key);
         if (alreadyExists) return d;
-        return { ...d, cards: [...d.cards, createCard(kanjiData)] };
+        return { ...d, cards: [...d.cards, newCard] };
       })
     );
   };
