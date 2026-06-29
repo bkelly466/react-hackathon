@@ -12,4 +12,10 @@ export default defineConfig({
       },
     },
   },
+  // Vitest reads this `test` field. We only test pure logic (no DOM), so the
+  // default Node environment is fine — no jsdom dependency needed.
+  test: {
+    include: ['src/**/*.test.{js,jsx}'],
+    environment: 'node',
+  },
 });

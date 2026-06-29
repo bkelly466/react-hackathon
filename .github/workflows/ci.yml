@@ -1,0 +1,37 @@
+name: CI
+
+# Runs the project's definition of done (lint + test + build) automatically on
+# every push to main and every pull request. This is the separate, repeatable
+# verifier: a change isn't "done" until this is green. It also gates deploys —
+# if CI fails on a PR, don't merge to main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Using `npm install` (not `npm ci`) because vitest was added to
+      # package.json but package-lock.json hasn't been regenerated yet.
+      # After you run `npm install` locally once and commit the updated
+      # package-lock.json, you can switch this to `npm ci` for reproducible installs.
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

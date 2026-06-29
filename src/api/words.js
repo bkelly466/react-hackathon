@@ -21,7 +21,7 @@ const MAX_WORD_RESULTS = 20;
  * Jisho tags JLPT levels like "jlpt-n5". Turn that into a clean "N5".
  * Returns a de-duplicated array (an entry can carry more than one tag).
  */
-function cleanJlpt(jlptTags) {
+export function cleanJlpt(jlptTags) {
   if (!Array.isArray(jlptTags)) return [];
   const levels = jlptTags
     .map((tag) => tag.replace(/^jlpt-/, '').toUpperCase()) // "jlpt-n5" → "N5"
@@ -38,7 +38,7 @@ function cleanJlpt(jlptTags) {
  *
  * Returns null for malformed entries so the caller can filter them out.
  */
-function normalizeWord(entry) {
+export function normalizeWord(entry) {
   const japanese = entry.japanese?.[0];
   if (!japanese) return null;
 
