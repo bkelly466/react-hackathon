@@ -1,93 +1,177 @@
-import { useState, useEffect } from 'react';
-import { createCard, createWordCard, getCardKey } from '../utils/card';
+import { useEffect, useMemo, useState } from 'react';
+import { generateClient } from 'aws-amplify/data';
+import { createCard, createWordCard } from '../utils/card';
 
-const STORAGE_KEY = 'kanjutsu_decks';
+/**
+ * Cloud-backed decks, replacing the old localStorage version.
+ *
+ * Data lives in the Amplify `Deck` and `Card` models (owner-scoped, so each
+ * signed-in user only sees their own). We use `observeQuery()` subscriptions so
+ * the local `decks` state stays in sync automatically after every create/update/
+ * delete — including changes from another device — without manual refetching.
+ *
+ * @param {boolean} enabled  Only subscribe/query when the user is signed in.
+ *                           When false (logged out) we expose an empty list.
+ */
+export function useDecks(enabled) {
+  // One data client for the hook's lifetime. Created here (not at module top)
+  // so it runs after Amplify.configure() in main.jsx.
+  const client = useMemo(() => generateClient(), []);
 
-export function useDecks() {
-  const [decks, setDecks] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [rawDecks, setRawDecks] = useState([]);
+  const [rawCards, setRawCards] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
-  }, [decks]);
+    if (!enabled) {
+      // Clear any previous user's data on sign-out. This is an intentional
+      // reset tied to the auth session changing; the synchronous-setState lint
+      // rule is overly strict about this legitimate case.
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setRawDecks([]);
+      setRawCards([]);
+      setIsLoading(true); // so the next sign-in shows a loading state, not "empty"
+      /* eslint-enable react-hooks/set-state-in-effect */
+      return;
+    }
 
-  const createDeck = ({ name, description, category }) => {
-    const newDeck = {
-      id: crypto.randomUUID(),
+    // observeQuery() emits the current list immediately, then again on every
+    // change. Its callbacks run asynchronously, so setState here is fine.
+    const deckSub = client.models.Deck.observeQuery().subscribe({
+      next: ({ items }) => {
+        setRawDecks(items);
+        setIsLoading(false);
+      },
+      error: (err) => {
+        console.error('Deck sync error:', err);
+        setIsLoading(false);
+      },
+    });
+    const cardSub = client.models.Card.observeQuery().subscribe({
+      next: ({ items }) => setRawCards(items),
+      error: (err) => console.error('Card sync error:', err),
+    });
+
+    return () => {
+      deckSub.unsubscribe();
+      cardSub.unsubscribe();
+    };
+  }, [enabled, client]);
+
+  // Join cards onto their decks and map DB records to the shape the UI expects.
+  // Gated on `enabled` so a logged-out state never shows stale data.
+  const decks = useMemo(
+    () =>
+      enabled
+        ? rawDecks.map((d) => ({
+            id: d.id,
+            name: d.name,
+            description: d.description || '',
+            category: d.category || { type: 'custom', value: '' },
+            createdAt: d.createdAt,
+            cards: rawCards.filter((c) => c.deckId === d.id).map(toUiCard),
+          }))
+        : [],
+    [enabled, rawDecks, rawCards]
+  );
+
+  // --- mutations (all async; observeQuery refreshes state for us) -----------
+
+  const createDeck = async ({ name, description, category }) => {
+    const { data, errors } = await client.models.Deck.create({
       name,
       description: description || '',
       category: category || { type: 'custom', value: '' },
-      createdAt: new Date().toISOString(),
-      cards: [],
-    };
-    setDecks(prev => [...prev, newDeck]);
-    return newDeck.id;
+    });
+    if (errors) {
+      console.error(errors);
+      throw new Error('Failed to create deck');
+    }
+    return data.id;
   };
 
-  const updateDeck = (deckId, updates) => {
-    setDecks(prev =>
-      prev.map(d => (d.id === deckId ? { ...d, ...updates } : d))
+  const updateDeck = async (deckId, updates) => {
+    await client.models.Deck.update({ id: deckId, ...updates });
+  };
+
+  const deleteDeck = async (deckId) => {
+    // No automatic cascade — delete the deck's cards first, then the deck.
+    const cards = rawCards.filter((c) => c.deckId === deckId);
+    await Promise.all(cards.map((c) => client.models.Card.delete({ id: c.id })));
+    await client.models.Deck.delete({ id: deckId });
+  };
+
+  const addCardToDeck = async (deckId, item, type = 'kanji') => {
+    const built = type === 'word' ? createWordCard(item) : createCard(item);
+    // Dedupe within this deck on the stable card key.
+    const exists = rawCards.some(
+      (c) => c.deckId === deckId && c.cardKey === built.key
     );
+    if (exists) return;
+    await client.models.Card.create(toModelInput(deckId, built));
   };
 
-  const deleteDeck = (deckId) => {
-    setDecks(prev => prev.filter(d => d.id !== deckId));
+  const removeCardFromDeck = async (deckId, cardId) => {
+    await client.models.Card.delete({ id: cardId });
   };
 
-  // Add a kanji OR a word to a deck. `type` selects which card builder to use;
-  // it defaults to 'kanji' so any older call sites keep working.
-  const addCardToDeck = (deckId, item, type = 'kanji') => {
-    const newCard = type === 'word' ? createWordCard(item) : createCard(item);
-    setDecks(prev =>
-      prev.map(d => {
-        if (d.id !== deckId) return d;
-        // Dedupe on the stable card key (handles both kanji and word cards,
-        // plus legacy cards with no `key` via getCardKey's fallback).
-        const alreadyExists = d.cards.some(c => getCardKey(c) === newCard.key);
-        if (alreadyExists) return d;
-        return { ...d, cards: [...d.cards, newCard] };
-      })
-    );
-  };
-
-  const removeCardFromDeck = (deckId, cardId) => {
-    setDecks(prev =>
-      prev.map(d =>
-        d.id === deckId
-          ? { ...d, cards: d.cards.filter(c => c.id !== cardId) }
-          : d
-      )
-    );
-  };
-
-  const updateCardSRS = (deckId, cardId, srsMetrics) => {
-    setDecks(prev =>
-      prev.map(d =>
-        d.id === deckId
-          ? {
-              ...d,
-              cards: d.cards.map(c =>
-                c.id === cardId ? { ...c, ...srsMetrics } : c
-              ),
-            }
-          : d
-      )
-    );
+  const updateCardSRS = async (deckId, cardId, srsMetrics) => {
+    await client.models.Card.update({ id: cardId, ...srsMetrics });
   };
 
   return {
     decks,
+    isLoading,
     createDeck,
     updateDeck,
     deleteDeck,
     addCardToDeck,
     removeCardFromDeck,
     updateCardSRS,
+  };
+}
+
+// --- mapping helpers --------------------------------------------------------
+
+/** Map a built card (from createCard/createWordCard) to a Card model record. */
+function toModelInput(deckId, card) {
+  return {
+    deckId,
+    type: card.type,
+    cardKey: card.key,
+    front: card.front,
+    back: card.back, // JSON field
+    kanji: card.kanji ?? null,
+    word: card.word ?? null,
+    reading: card.reading ?? null,
+    // Card.jlpt is a string in the schema; kanji cards carry a number (e.g. 5).
+    jlpt: card.jlpt != null ? String(card.jlpt) : null,
+    grade: card.grade ?? null,
+    repetitions: card.repetitions,
+    easeFactor: card.easeFactor,
+    interval: card.interval,
+    nextReviewDate: card.nextReviewDate,
+    addedAt: card.addedAt,
+  };
+}
+
+/** Map a Card model record back to the shape the components/SRS expect. */
+function toUiCard(record) {
+  return {
+    id: record.id,
+    type: record.type,
+    key: record.cardKey,
+    front: record.front,
+    back: record.back || {},
+    kanji: record.kanji,
+    word: record.word,
+    reading: record.reading,
+    jlpt: record.jlpt,
+    grade: record.grade,
+    repetitions: record.repetitions ?? 0,
+    easeFactor: record.easeFactor ?? 2.5,
+    interval: record.interval ?? 0,
+    nextReviewDate: record.nextReviewDate,
+    addedAt: record.addedAt,
   };
 }
