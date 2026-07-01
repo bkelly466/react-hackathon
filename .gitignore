@@ -28,5 +28,7 @@ dist-ssr
 amplify_outputs*
 amplifyconfiguration*
 
-# Claude Code — machine-local permission state, never commit
-.claude/settings.local.json
+# Claude — assistant config, agent definitions, and project instructions.
+# Kept local (they stay on disk), not committed to the repo.
+.claude/
+CLAUDE.md
